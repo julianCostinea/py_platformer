@@ -32,6 +32,9 @@ class Tile(pygame.sprite.Sprite):
 
         main_group.add(self)
 
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+
 
 tile_map = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -56,6 +59,17 @@ tile_map = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1]
 ]
 
+for row in range(len(tile_map)):
+    for col in range(len(tile_map[row])):
+        x = col * 32
+        y = row * 32
+        if tile_map[row][col] == 1:
+            Tile(x, y, 1, main_tile_group)
+        elif tile_map[row][col] == 2:
+            Tile(x, y, 2, main_tile_group, grass_tile_group)
+        elif tile_map[row][col] == 3:
+            Tile(x, y, 3, main_tile_group, water_tile_group)
+
 # main loop
 running = True
 while running:
@@ -63,6 +77,11 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    # Draw
+    display_surface.fill((10, 75, 75))
+
+    main_tile_group.draw(display_surface)
 
     # Update
     pygame.display.update()

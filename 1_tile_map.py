@@ -17,21 +17,25 @@ clock = pygame.time.Clock()
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, grass_tiles, water_tiles):
         super().__init__()
         self.image = pygame.image.load("knight.png")
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (x, y)
 
+        self.grass_tiles = grass_tiles
+        self.water_tiles = water_tiles
+
         self.position = vector(x, y)
         self.velocity = vector(0, 0)
         self.acceleration = vector(0, 0)
 
-        self.HORIZONTAL_ACCELERATION = 2
+        self.HORIZONTAL_ACCELERATION = 1.5
         self.HORIZONTAL_FRICTION = 0.15
+        self.VERTICAL_ACCELERATION = 0.5
 
     def update(self):
-        self.acceleration = vector(0, 0)
+        self.acceleration = vector(0, self.VERTICAL_ACCELERATION)
         
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
@@ -44,6 +48,17 @@ class Player(pygame.sprite.Sprite):
         self.position += self.velocity + 0.5 * self.acceleration
 
         self.rect.bottomleft = self.position
+
+        collided_platforms = pygame.sprite.spritecollide(self, self.grass_tiles, False)
+
+        if collided_platforms:
+            self.position.y = collided_platforms[0].rect.top
+            self.velocity.y = 0
+
+        if pygame.sprite.spritecollide(self, self.water_tiles, False):
+            self.position = vector(0, 32)
+            self.velocity = vector(0, 0)
+            self.acceleration = vector(0, 0)
 
 
 main_tile_group = pygame.sprite.Group()
@@ -72,7 +87,7 @@ class Tile(pygame.sprite.Sprite):
 
 tile_map = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2],
     [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -82,7 +97,7 @@ tile_map = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2],
     [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -104,7 +119,7 @@ for row in range(len(tile_map)):
         elif tile_map[row][col] == 3:
             Tile(x, y, 3, main_tile_group, water_tile_group)
         elif tile_map[row][col] == 4:
-            my_player = Player(x, y + 32)
+            my_player = Player(x, y + 32, grass_tile_group, water_tile_group)
             my_player_group.add(my_player)
 
 background_image = pygame.image.load("background.png")

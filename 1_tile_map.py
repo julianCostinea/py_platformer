@@ -27,14 +27,30 @@ class Player(pygame.sprite.Sprite):
         self.velocity = vector(0, 0)
         self.acceleration = vector(0, 0)
 
+        self.HORIZONTAL_ACCELERATION = 2
+        self.HORIZONTAL_FRICTION = 0.15
+
     def update(self):
-        pass
+        self.acceleration = vector(0, 0)
+        
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.acceleration.x = -1 * self.HORIZONTAL_ACCELERATION
+        elif keys[pygame.K_RIGHT]:
+            self.acceleration.x = self.HORIZONTAL_ACCELERATION
+
+        self.acceleration.x -= self.velocity.x * self.HORIZONTAL_FRICTION
+        self.velocity += self.acceleration
+        self.position += self.velocity + 0.5 * self.acceleration
+
+        self.rect.bottomleft = self.position
 
 
 main_tile_group = pygame.sprite.Group()
 grass_tile_group = pygame.sprite.Group()
 water_tile_group = pygame.sprite.Group()
 my_player_group = pygame.sprite.Group()
+
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, x, y, image_int, main_group, sub_group=""):

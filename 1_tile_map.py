@@ -23,6 +23,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (x, y)
 
+        self.starting_x = x
+        self.starting_y = y
+
         self.grass_tiles = grass_tiles
         self.water_tiles = water_tiles
 
@@ -33,10 +36,23 @@ class Player(pygame.sprite.Sprite):
         self.HORIZONTAL_ACCELERATION = 1.5
         self.HORIZONTAL_FRICTION = 0.15
         self.VERTICAL_ACCELERATION = 0.5
+        self.VERTICAL_JUMP_SPEED = 15
 
     def update(self):
+        collided_platforms = pygame.sprite.spritecollide(self, self.grass_tiles, False)
+
+        if collided_platforms:
+            if self.velocity.y > 0:
+                self.position.y = collided_platforms[0].rect.top
+                self.velocity.y = 0
+
+        if pygame.sprite.spritecollide(self, self.water_tiles, False):
+            self.position = vector(self.starting_x, self.starting_y)
+            self.velocity = vector(0, 0)
+
+    def move(self):
         self.acceleration = vector(0, self.VERTICAL_ACCELERATION)
-        
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.acceleration.x = -1 * self.HORIZONTAL_ACCELERATION
@@ -47,18 +63,22 @@ class Player(pygame.sprite.Sprite):
         self.velocity += self.acceleration
         self.position += self.velocity + 0.5 * self.acceleration
 
+        if self.position.x > WINDOW_WIDTH:
+            self.position.x = 0
+        elif self.position.x < 0:
+            self.position.x = WINDOW_WIDTH
+
         self.rect.bottomleft = self.position
 
-        collided_platforms = pygame.sprite.spritecollide(self, self.grass_tiles, False)
+    def check_collisions(self, dx, dy):
+        for tile in self.grass_tiles:
+            if tile.rect.colliderect(self.rect.move(dx, dy)):
+                return True
+        return False
 
-        if collided_platforms:
-            self.position.y = collided_platforms[0].rect.top
-            self.velocity.y = 0
-
-        if pygame.sprite.spritecollide(self, self.water_tiles, False):
-            self.position = vector(0, 32)
-            self.velocity = vector(0, 0)
-            self.acceleration = vector(0, 0)
+    def jump(self):
+        if pygame.sprite.spritecollide(self, self.grass_tiles, False):
+            self.velocity.y = -1 * self.VERTICAL_JUMP_SPEED
 
 
 main_tile_group = pygame.sprite.Group()
@@ -133,6 +153,10 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                my_player.jump()
 
     # Blit background
     display_surface.blit(background_image, background_rect)

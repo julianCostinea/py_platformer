@@ -34,6 +34,21 @@ class Player(pygame.sprite.Sprite):
         self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (7).png"), (64, 64)))
         self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (8).png"), (64, 64)))
 
+        for sprite in self.move_right_sprites:
+            self.move_left_sprites.append(pygame.transform.flip(sprite, True, False))
+
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (1).png"), (64, 64)))
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (2).png"), (64, 64)))
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (3).png"), (64, 64)))
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (4).png"), (64, 64)))
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (5).png"), (64, 64)))
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (6).png"), (64, 64)))
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (7).png"), (64, 64)))
+        self.idle_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Idle (8).png"), (64, 64)))
+
+        for sprite in self.idle_right_sprites:
+            self.idle_left_sprites.append(pygame.transform.flip(sprite, True, False))
+
         self.current_sprite = 0
         self.image = self.move_right_sprites[self.current_sprite]
 
@@ -59,15 +74,28 @@ class Player(pygame.sprite.Sprite):
         self.move()
         self.check_collisions()
 
+        self.mask = pygame.mask.from_surface(self.image)
+
+        mask_outline = self.mask.outline()
+        pygame.draw.lines(self.image, (255, 255, 0), True, mask_outline, 1)
+
+        pygame.draw.rect(display_surface, (255, 255, 0), self.rect, 1)
+
     def move(self):
         self.acceleration = vector(0, self.VERTICAL_ACCELERATION)
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.acceleration.x = -1 * self.HORIZONTAL_ACCELERATION
+            self.animate(self.move_left_sprites, .2)
         elif keys[pygame.K_RIGHT]:
             self.acceleration.x = self.HORIZONTAL_ACCELERATION
             self.animate(self.move_right_sprites, .2)
+        else:
+            if self.velocity.x < 0:
+                self.animate(self.idle_left_sprites, .2)
+            else:
+                self.animate(self.idle_right_sprites, .2)
 
         self.acceleration.x -= self.velocity.x * self.HORIZONTAL_FRICTION
         self.velocity += self.acceleration
@@ -81,7 +109,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottomleft = self.position
 
     def check_collisions(self):
-        collided_platforms = pygame.sprite.spritecollide(self, self.grass_tiles, False)
+        collided_platforms = pygame.sprite.spritecollide(self, self.grass_tiles, False, pygame.sprite.collide_mask)
 
         if collided_platforms:
             if self.velocity.y > 0:
@@ -127,6 +155,9 @@ class Tile(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
+
+    def update(self):
+        pygame.draw.rect(display_surface, (0, 0, 255), self.rect, 1)
 
 
 tile_map = [
@@ -186,6 +217,7 @@ while running:
     display_surface.blit(background_image, background_rect)
 
     main_tile_group.draw(display_surface)
+    main_tile_group.update()
 
     my_player_group.update()
     my_player_group.draw(display_surface)

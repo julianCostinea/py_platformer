@@ -19,7 +19,24 @@ clock = pygame.time.Clock()
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, grass_tiles, water_tiles):
         super().__init__()
-        self.image = pygame.image.load("knight.png")
+
+        self.move_right_sprites = []
+        self.move_left_sprites = []
+        self.idle_right_sprites = []
+        self.idle_left_sprites = []
+
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (1).png"), (64, 64)))
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (2).png"), (64, 64)))
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (3).png"), (64, 64)))
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (4).png"), (64, 64)))
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (5).png"), (64, 64)))
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (6).png"), (64, 64)))
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (7).png"), (64, 64)))
+        self.move_right_sprites.append(pygame.transform.scale(pygame.image.load("boy/Run (8).png"), (64, 64)))
+
+        self.current_sprite = 0
+        self.image = self.move_right_sprites[self.current_sprite]
+
         self.rect = self.image.get_rect()
         self.rect.bottomleft = (x, y)
 
@@ -39,16 +56,8 @@ class Player(pygame.sprite.Sprite):
         self.VERTICAL_JUMP_SPEED = 15
 
     def update(self):
-        collided_platforms = pygame.sprite.spritecollide(self, self.grass_tiles, False)
-
-        if collided_platforms:
-            if self.velocity.y > 0:
-                self.position.y = collided_platforms[0].rect.top
-                self.velocity.y = 0
-
-        if pygame.sprite.spritecollide(self, self.water_tiles, False):
-            self.position = vector(self.starting_x, self.starting_y)
-            self.velocity = vector(0, 0)
+        self.move()
+        self.check_collisions()
 
     def move(self):
         self.acceleration = vector(0, self.VERTICAL_ACCELERATION)
@@ -58,6 +67,7 @@ class Player(pygame.sprite.Sprite):
             self.acceleration.x = -1 * self.HORIZONTAL_ACCELERATION
         elif keys[pygame.K_RIGHT]:
             self.acceleration.x = self.HORIZONTAL_ACCELERATION
+            self.animate(self.move_right_sprites, .2)
 
         self.acceleration.x -= self.velocity.x * self.HORIZONTAL_FRICTION
         self.velocity += self.acceleration
@@ -70,15 +80,29 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.bottomleft = self.position
 
-    def check_collisions(self, dx, dy):
-        for tile in self.grass_tiles:
-            if tile.rect.colliderect(self.rect.move(dx, dy)):
-                return True
-        return False
+    def check_collisions(self):
+        collided_platforms = pygame.sprite.spritecollide(self, self.grass_tiles, False)
+
+        if collided_platforms:
+            if self.velocity.y > 0:
+                self.position.y = collided_platforms[0].rect.top
+                self.velocity.y = 0
+
+        if pygame.sprite.spritecollide(self, self.water_tiles, False):
+            self.position = vector(self.starting_x, self.starting_y)
+            self.velocity = vector(0, 0)
 
     def jump(self):
         if pygame.sprite.spritecollide(self, self.grass_tiles, False):
             self.velocity.y = -1 * self.VERTICAL_JUMP_SPEED
+
+    def animate(self, sprite_list, speed):
+        if self.current_sprite < len(sprite_list) - 1:
+            self.current_sprite += speed
+        else:
+            self.current_sprite = 0
+
+        self.image = sprite_list[int(self.current_sprite)]
 
 
 main_tile_group = pygame.sprite.Group()

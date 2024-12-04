@@ -113,7 +113,7 @@ class Player(pygame.sprite.Sprite):
 
         if collided_platforms:
             if self.velocity.y > 0:
-                self.position.y = collided_platforms[0].rect.top
+                self.position.y = collided_platforms[0].rect.top + 10
                 self.velocity.y = 0
 
         if pygame.sprite.spritecollide(self, self.water_tiles, False):
@@ -146,6 +146,8 @@ class Tile(pygame.sprite.Sprite):
             self.image = pygame.image.load("dirt.png")
         elif image_int == 2:
             self.image = pygame.image.load("grass.png")
+            # create mask only at beginning to not do it in every loop of check_collisions
+            self.mask = pygame.mask.from_surface(self.image)
             sub_group.add(self)
         elif image_int == 3:
             self.image = pygame.image.load("water.png")
